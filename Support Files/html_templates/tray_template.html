@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>cart_template</title>
+    <style type="text/css">
+        body {
+            font-size: 9pt; font-family: Tahoma,Verdana
+        }
+
+        @media print {
+            .page-break {page-break-before: always;}
+            tr {page-break-inside: avoid;}
+        }
+
+        @page {
+        size: A4 portrait;
+        margin: 15mm;
+        }
+
+        div.t1 {
+            padding-left: 2pt; text-align: left; font-size: 18pt; font-family: Trebuchet MS; border-bottom: 2px solid lightgray;
+        }
+
+        div.t2 {
+            padding-left: 2pt; text-align: left; font-size: 12pt; font-family: Trebuchet MS;
+        }
+
+        table {
+            border-collapse: collapse; border: 2px solid lightgray; font-size: 9pt; font-family: Tahoma,Verdana;
+        }
+
+        th {
+            border: 2px solid lightgray; background-color: lightgray; padding-left: 2pt; padding-right: 2pt
+        }
+
+        tr {
+            border: 2px solid lightgray; text-align: left; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.comment {
+            background-color:sandybrown; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.duplicate {
+            background-color:lightcoral; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.matched {
+            background-color:rgb(211, 241, 218); padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.msd {
+            background-color: yellow; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.msd2 {
+            background-color: orange; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.fast {
+            background-color: lightcyan; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        td {
+            padding: 2pt; border: 2px solid lightgray; font-size: 10pt;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-break">
+    <div class="t1">Tray A</div>
+    <br></br>
+    <table>
+        <tbody>
+            <tr>
+                <th width="16%" align="left">Position</th>
+                <th width="18%" align="left">Part Number</th>
+                <th width="10%" align="left">Action</th>
+                <th width="14%" align="left">Comment</th>
+                <th width="22%" align="left">Info from Nexim</th>
+                <th width="10%" align="left">Other</th>
+                <th width="5%" align="left">Type</th>
+                <th width="5%" align="left">Width</th>
+            </tr>
+        </tbody>
+    </table>
+    <br></br>
+    <br></br>
+    <div class="t1">Tray B</div>
+    <br></br>
+    <table>
+        <tbody>
+            <tr>
+                <th width="16%" align="left">Position</th>
+                <th width="18%" align="left">Part Number</th>
+                <th width="10%" align="left">Action</th>
+                <th width="14%" align="left">Comment</th>
+                <th width="22%" align="left">Info from Nexim</th>
+                <th width="10%" align="left">Other</th>
+                <th width="5%" align="left">Type</th>
+                <th width="5%" align="left">Width</th>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</body>
+</html>

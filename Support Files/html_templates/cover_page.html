@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>cover_page</title>
+    <style type="text/css">
+        body {
+            font-size: 9pt; font-family: Tahoma,Verdana
+        }
+
+        @media print {
+            .page-break {page-break-before: always;}
+            tr {page-break-inside: avoid;}
+        }
+
+        @page {
+        size: A4 portrait;
+        margin: 15mm;
+        }
+
+        div.main-multi-job {
+            margin: auto; text-align: center; font-size: 48pt; font-family: Trebuchet MS; border-bottom: 2px solid lightgray;
+        }
+
+        div.t1 {
+            padding-left: 2pt; text-align: left; font-size: 18pt; font-family: Trebuchet MS; border-bottom: 2px solid lightgray;
+        }
+
+        div.t2 {
+            padding-left: 2pt; text-align: left; font-size: 12pt; font-family: Trebuchet MS;
+        }
+
+        table {
+            margin: auto; border-collapse: collapse; border: 2px solid lightgray; font-size: 9pt; font-family: Tahoma,Verdana;
+        }
+
+        table.cover {
+            margin: auto; text-align: center; border: none;
+        }
+
+        th {
+            border: 2px solid lightgray; background-color: lightgray; padding-left: 2pt; padding-right: 2pt
+        }
+
+        tr {
+            border: 2px solid lightgray; text-align: left; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.cover {
+            border: none;
+        }
+        
+        tr.comment {
+            background-color:plum; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.duplicate {
+            background-color:lightcoral; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.matched {
+            background-color:rgb(211, 241, 218); padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.fast-msd {
+            background-color:rgb(255, 255, 175); padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.msd {
+            background-color: yellow; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.msd2 {
+            background-color: rgb(255, 189, 67); padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        tr.fast {
+            background-color: lightcyan; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        td {
+            padding: 2pt; border: 2px solid lightgray; font-size: 10pt;
+        }
+
+        td.cover {
+            font-size: 14pt; border: none; font-family: Tahoma,Verdana;
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+    <br></br>
+    <br></br>
+    <br></br>
+    <br></br>
+    <div class="main-multi-job">#480</div>
+    <br></br>
+    <br></br>
+    <table class="cover">
+        <tbody>
+            <tr class="cover">
+                <td class="cover">Inline</td>
+                <td class="cover" style="padding-left: 10pt;" align="right">#479</td>
+            </tr>
+            <tr class="cover">
+                <td class="cover">Teardown</th>
+                <td class="cover" style="padding-left: 10pt;" align="right">#478</th>
+            </tr>
+        
+            <tr class="cover">
+                <td class="cover">MSDs in setup</td>
+                <td class="cover" style="padding-left: 10pt; color: gold" align="right">15</td>
+            </tr>
+            <tr class="cover">
+                <td class="cover">FASTMATARE</td>
+                <td class="cover" style="padding-left: 10pt; color: blue" align="right">15</td>
+            </tr>
+            <tr class="cover">
+                <td class="cover">Duplicates</td>
+                <td class="cover" style="padding-left: 10pt; color: red;" align="right">15</td>
+            </tr>
+            <tr class="cover">
+                <td class="cover">Trays</td>
+                <td class="cover" style="padding-left: 10pt; " align="right">0</td>
+            </tr>
+            <tr class="cover">
+                <td class="cover">Group 1 (extra)</td>
+                <td class="cover" style="padding-left: 10pt; " align="right">0</td>
+            </tr>
+            <tr class="cover">
+                <td class="cover">Saved feeders</td>
+                <td class="cover" style="padding-left: 10pt; color: green;" align="right">50</td>
+            </tr>
+            <tr class="cover">
+                <td class="cover">Total components</td>
+                <td class="cover" style="padding-left: 10pt;" align="right">250</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</body>
+</html>
