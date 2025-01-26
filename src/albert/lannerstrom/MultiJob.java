@@ -11,8 +11,10 @@ public class MultiJob {
     private final Boolean extraGroup;
     private final Element table0;
     private Element table1;
+    private Element table2;
     private final ArrayList<Component> group0;
     private ArrayList<Component> group1;
+    private ArrayList<Component> group2;
 
     public MultiJob(String fileName, Boolean extraGroup, Element firstTable, ArrayList<Component> firstGroup) {
         this.fileName = fileName;
@@ -29,6 +31,18 @@ public class MultiJob {
         this.table1 = secondTable;
         this.group0 = firstGroup;
         this.group1 = secondGroup;
+        createNumber();
+    }
+
+    public MultiJob(String fileName, Boolean extraGroup, Element firstTable, Element secondTable, Element thirdTable, ArrayList<Component> firstGroup, ArrayList<Component> secondGroup, ArrayList<Component> thirdGroup) {
+        this.fileName = fileName;
+        this.extraGroup = extraGroup;
+        this.table0 = firstTable;
+        this.table1 = secondTable;
+        this.table2 = thirdTable;
+        this.group0 = firstGroup;
+        this.group1 = secondGroup;
+        this.group2 = thirdGroup;
         createNumber();
     }
 

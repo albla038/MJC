@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>pcb_template</title>
+    <style type="text/css">
+        body {
+            font-size: 9pt; font-family: Tahoma,Verdana
+        }
+
+        @media print {
+            .page-break {page-break-before: always;}
+            tr {page-break-inside: avoid;}
+        }
+
+        @page {
+        size: A4 portrait;
+        margin: 15mm;
+        }
+
+        input {
+          margin: 1pt;
+        }
+
+        div.t1 {
+            padding-left: 2pt; text-align: left; font-size: 18pt; font-family: Trebuchet MS; border-bottom: 2px solid lightgray;
+        }
+
+        div.t2 {
+            padding-left: 2pt; text-align: left; font-size: 12pt; font-family: Trebuchet MS;
+        }
+
+        table {
+            border-collapse: collapse; border: 2px solid lightgray; font-size: 9pt; font-family: Tahoma,Verdana;
+        }
+
+        th {
+            border: 2px solid lightgray; background-color: lightgray; padding-left: 2pt; padding-right: 2pt
+        }
+
+        tr {
+            border: 2px solid lightgray; text-align: left; padding-left: 2pt; padding-right: 2pt; vertical-align: top
+        }
+
+        td {
+            padding: 2pt; border: 2px solid lightgray; font-size: 10pt;
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+    <div class="t1">PCB list - #</div>
+    <br></br>
+    <table>
+        <tbody>
+            <tr>
+                <th width="9%" align="left">Shop Order</th>
+                <th width="12%" align="left">Article Number</th>
+                <th width="15%" align="left">MSD Location</th>
+                <th width="12%" align="left">PCB Number</th>
+                <th width="5%" align="left">QTY</th>
+                <th width="12%" align="left">Barcode</th>
+                <th width="17%" align="left">Comment 1</th>
+                <th width="17%" align="left">Comment 2</th>
+                <th width="1%" align="left"></th>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</body>
+</html>

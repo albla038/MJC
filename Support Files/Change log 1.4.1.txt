@@ -1,0 +1,43 @@
+MJC for Nexim 1.4.1
+© Albert Lännerström 2022
+
+Change log 1.4.1 2022-02-27
+* Fixed title number in the PCB list
+* Added a second comment column
+* Rearranged the columns in the PCB and programming lists for better readability and workflow
+
+Change log 1.4.0 2022-02-15
+* Added a PCB and programming list that takes data from WeProd and creates another report
+
+Change log 1.3.0 2021-09-27:
+* Added a short checklist on the cover page (in swedish) for the operator to review and to sign.
+* From now on duplicates and general comments from Nexim only colors its cell and not the whole row. This allows for two colors in the same row which is useful
+* Every row now has a column with checkboxes
+* Programmed MSD trays now get the color bright yellow
+* Removed the "Width" column from the tray page
+
+Change log 1.2.1 2021-07-04:
+* The "Type" column now correctly displays type and not width in the cart tables
+
+Change log 1.2.0:
+* A feeder's width now determines the width of its row
+* MSD coloring/action in the teardown list used to malfunction in certain setup combinations. This is now fixed
+* Extra feeders in the teardown and setup MSD lists are now marked as "Position / Extra" in the position column
+* MSD coloring/action now works properly on extra feeders
+* MSD extra feeders isn't added to cart pages
+* An empty row on the "Extra feeders" page doesn't count as an extra feeder in the cover page stats anymore
+
+
+Change log 1.1.0:
+* MJC now includes location data from IFS that can be easily updated and stored in a .csv file
+* MSD coloring now works properly on all pages
+* If the setup multijob contains more than two groups, they will now also be included on the extra feeder page
+* The cover page (first page of every setup report) now includes number of MSDs in teardown
+* Rows not containing a part number are not marked as duplicates anymore (used to happened on the extra page)
+* Fixed a bug that would force you to restart the application if you would want to create a mutiple multijob setup report after creating a single multijob report
+
+Change log 1.0.1:
+* You now have the option to override the error message that display when trying to load three multijob files with numbers that doesn't apply to the the following rule: Setup > Inline > Teardown
+* MJC can now create a new setup report even when the setup multijob contains more than two groups.
+* The "Setup MSD list" page now includes the setup multijob number
+* "Throw away this page when done with..." reminder text is now displayed at the bottom of the page

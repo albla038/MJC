@@ -18,6 +18,10 @@
         margin: 15mm;
         }
 
+        input {
+          margin: 1pt;
+        }
+
         div.main-multi-job {
             margin: auto; text-align: center; font-size: 48pt; font-family: Trebuchet MS; border-bottom: 2px solid lightgray;
         }
@@ -30,12 +34,30 @@
             padding-left: 2pt; text-align: left; font-size: 12pt; font-family: Trebuchet MS;
         }
 
+        div.t3 {
+            padding-left: 40pt; text-align: left; font-size: 18pt; font-family: Trebuchet MS;
+        }
+
+        p {
+            font-size: 11pt; font-family: Tahoma,Verdana;
+        }
+
+        input[type="checkbox"].check {
+            vertical-align: middle;
+            display: inline-block;
+            margin-right: 5pt;
+        }
+
         table {
             margin: auto; border-collapse: collapse; border: 2px solid lightgray; font-size: 9pt; font-family: Tahoma,Verdana;
         }
 
         table.cover {
             margin: auto; text-align: center; border: none;
+        }
+
+        table.sign {
+            text-align: left; border: none;
         }
 
         th {
@@ -49,6 +71,10 @@
         tr.cover {
             border: none;
         }
+
+        tr.sign {
+            border: none;
+        }
         
         tr.comment {
             background-color:plum; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
@@ -59,7 +85,7 @@
         }
 
         tr.matched {
-            background-color:rgb(211, 241, 218); padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+            background-color:rgb(175, 255, 194); padding-left: 2pt; padding-right: 2pt; vertical-align: middle
         }
 
         tr.fast-msd {
@@ -75,7 +101,7 @@
         }
 
         tr.fast {
-            background-color: lightcyan; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+            background-color: rgb(149, 248, 255); padding-left: 2pt; padding-right: 2pt; vertical-align: middle
         }
 
         td {
@@ -84,6 +110,18 @@
 
         td.cover {
             font-size: 14pt; border: none; font-family: Tahoma,Verdana;
+        }
+
+        td.sign {
+            font-size: 11pt; padding-bottom: 8pt; border: none; font-family: Tahoma,Verdana;
+        }
+
+        td.duplicate {
+            background-color:lightcoral; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
+        }
+
+        td.comment {
+            background-color:plum; padding-left: 2pt; padding-right: 2pt; vertical-align: middle
         }
 
     </style>
@@ -113,6 +151,10 @@
                 <td class="cover" style="padding-left: 10pt; color: gold" align="right">15</td>
             </tr>
             <tr class="cover">
+                <td class="cover">MSDs in teardown</td>
+                <td class="cover" style="padding-left: 10pt; color: gold" align="right">15</td>
+            </tr>
+            <tr class="cover">
                 <td class="cover">FASTMATARE</td>
                 <td class="cover" style="padding-left: 10pt; color: blue" align="right">15</td>
             </tr>
@@ -125,7 +167,7 @@
                 <td class="cover" style="padding-left: 10pt; " align="right">0</td>
             </tr>
             <tr class="cover">
-                <td class="cover">Group 1 (extra)</td>
+                <td class="cover">Extra feeders</td>
                 <td class="cover" style="padding-left: 10pt; " align="right">0</td>
             </tr>
             <tr class="cover">
@@ -138,6 +180,34 @@
             </tr>
         </tbody>
     </table>
+
+    <br></br>
+    <br></br>
+
+    <div class="t1"></div>
+
+    <br></br>
+    <br></br>
+
+    <div class="t3">
+        I certify that:
+        <p><input type="checkbox" class="check">I have followed the kitting-routine step by step</p>
+        <p><input type="checkbox" class="check">All carts are complete and ready for changeover</p>
+        <p><input type="checkbox" class="check"><u>ALL</u> MSD-reels are kitted and sits in their respective MSD-cabinets</p>
+        <p><input type="checkbox" class="check"><u>ALL</u> MSD-trays that will be used in this setup exists in its MSD-cabinet (CAB2)</p>
+
+        <table class="sign" align="left">
+            <tbody>
+                <tr class="sign">
+                    <td class="sign">Date:</td>
+                    <td class="sign">______________________</td>
+                </tr>
+                <tr class="sign">
+                    <td class="sign">Signature:</td>
+                    <td class="sign">______________________</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>

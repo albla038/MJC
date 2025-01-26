@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>program_template</title>
+    <style type="text/css">
+        body {
+            font-size: 9pt; font-family: Tahoma,Verdana
+        }
+
+        @media print {
+            .page-break {page-break-before: always;}
+            tr {page-break-inside: avoid;}
+        }
+
+        @page {
+        size: A4 portrait;
+        margin: 15mm;
+        }
+
+        input {
+          margin: 1pt;
+        }
+
+        div.t1 {
+            padding-left: 2pt; text-align: left; font-size: 18pt; font-family: Trebuchet MS; border-bottom: 2px solid lightgray;
+        }
+
+        div.t2 {
+            padding-left: 2pt; text-align: left; font-size: 12pt; font-family: Trebuchet MS;
+        }
+
+        table {
+            border-collapse: collapse; border: 2px solid lightgray; font-size: 9pt; font-family: Tahoma,Verdana;
+        }
+
+        th {
+            border: 2px solid lightgray; background-color: lightgray; padding-left: 2pt; padding-right: 2pt
+        }
+
+        tr {
+            border: 2px solid lightgray; text-align: left; padding-left: 2pt; padding-right: 2pt; vertical-align: top
+        }
+
+        td {
+            padding: 2pt; border: 2px solid lightgray; font-size: 10pt;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-break">
+    <div class="t1">Programming list - #</div>
+    <br></br>
+    <table>
+        <tbody>
+            <tr>
+                <th width="12%" align="left">Job Number</th>
+                <th width="12%" align="left">Part Number</th>
+                <th width="14%" align="left">Program Number</th>
+                <th width="7%" align="left">QTY</th>
+                <th width="27%" align="left">Comment 1</th>
+                <th width="27%" align="left">Comment 2</th>
+                <th width="1%" align="left"></th>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</body>
+</html>

@@ -5,6 +5,7 @@ import net.miginfocom.swing.MigLayout;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import javax.swing.*;
@@ -17,17 +18,21 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MJC {
     JFrame frame;
     JPanel background;
-    JPanel foreground;
+    JPanel foregroundUpper;
+    JPanel foregroundLower;
     JButton nextOpenButton;
     JButton currentOpenButton;
     JButton finishedOpenButton;
-    JButton createFileButton;
+    JButton createReportFileButton;
+    JButton createPCBAndProgFileButton;
 
     private static String loadPath = ".";
+    private static String loadPathWeProd = ".";
     private static String savePath = ".";
 
     public static String OUTPUT_FILE_NAME;
@@ -36,6 +41,12 @@ public class MJC {
     public static final CharSequence MSD_KEY = "MSD";
     public static final int TRAY_LENGTH_KEY = 11;
 
+    public static final String PART_NUMBER_KEY = "Part No";
+    public static final String LOCATION_NUMBER_KEY = "Location No";
+
+    public static final String LOAD_PATH_MULTIJOB = "Support Files/LoadPath.txt";
+    public static final String LOAD_PATH_WEPROD = "Support Files/LoadPathWeProd.txt";
+
     public static final String CART_TEMPLATE_PATH = "Support Files/html_templates/cart_template.html";
     public static final String COVER_PAGE_PATH = "Support Files/html_templates/cover_page.html";
     public static final String EXTRA_TEMPLATE_PATH = "Support Files/html_templates/extra_template.html";
@@ -43,8 +54,14 @@ public class MJC {
     public static final String MSD_TEMPLATE_PATH = "Support Files/html_templates/msd_template.html";
     public static final String TEARDOWNMSD_TEMPLATE_PATH = "Support Files/html_templates/teardownMsd_template.html";
     public static final String TRAY_TEMPLATE_PATH = "Support Files/html_templates/tray_template.html";
+    public static final String PCB_TEMPLATE_PATH = "Support Files/html_templates/pcb_template.html";
+    public static final String PROGRAM_TEMPLATE_PATH = "Support Files/html_templates/program_template.html";
 
-    public static int MSD_AMOUNT;
+    public static final String COMPONENTS_IFS_CSV_PATH = "Support Files/AllSmtComponentsIFS.csv";
+    public HashMap<String, String> ifsPartMap;
+
+    public static int MSD_SETUP_AMOUNT;
+    public static int MSD_TEARDOWN_AMOUNT;
     public static int FASTMATARE_AMOUNT;
     public static int DUPLICATE_AMOUNT;
     public static int TRAY_AMOUNT;
@@ -65,7 +82,8 @@ public class MJC {
     public File teardownMultiJobFile;
 
     public SetupDoc setupDoc;
-    public static Boolean SINGLE_MULTIJOB_SETUP = false;
+    public static Boolean IS_SINGLE_MULTIJOB_SETUP = false;
+    public static Boolean CONTAINS_PROG = false;
 
     public static void main(String[] args) {
         new MJC().startUp();
@@ -73,8 +91,7 @@ public class MJC {
 
     private void startUp() {
         buildGUI();
-        // createSetupDoc();
-
+        getComponentDataFromIfs();
     }
 
     private void buildGUI() {
@@ -85,7 +102,8 @@ public class MJC {
         // --- Initialize and create components ---
         frame = new JFrame();
         background = new JPanel();
-        foreground = new JPanel();
+        foregroundUpper = new JPanel();
+        foregroundLower = new JPanel();
         JPanel finishedPanel = new JPanel();
         JPanel currentPanel = new JPanel();
         JPanel nextPanel = new JPanel();
@@ -97,9 +115,16 @@ public class MJC {
         finishedOpenButton = new JButton("Choose file", UIManager.getIcon("Tree.openIcon"));
         JButton finishedDeleteButton = new JButton(UIManager.getIcon("InternalFrame.closeIcon"));
 
-        createFileButton = new JButton("Create setup report file", UIManager.getIcon("Tree.leafIcon"));
 
         Dimension buttonDimension = new Dimension(150, 36);
+        Dimension buttonDimensionCreate = new Dimension(215, 36);
+
+        createReportFileButton = new JButton("Create setup report file", UIManager.getIcon("Tree.leafIcon"));
+        createPCBAndProgFileButton = new JButton("Create PCB & prog. report file", UIManager.getIcon("Tree.leafIcon"));
+
+        createReportFileButton.setPreferredSize(buttonDimensionCreate);
+        createPCBAndProgFileButton.setPreferredSize(buttonDimensionCreate);
+
 
         // --- Next MultiJob Panel ---
         nextPanel.setLayout(new MigLayout());
@@ -136,9 +161,14 @@ public class MJC {
 
 
         // --- Layout settings ---
-        foreground.setLayout(new MigLayout(
+        foregroundUpper.setLayout(new MigLayout(
                 "",
                 "[]25[]25[]",
+                "[]"
+        ));
+        foregroundLower.setLayout(new MigLayout(
+                "",
+                "[]235[]",
                 "[]"
         ));
         background.setLayout(new MigLayout(
@@ -160,38 +190,54 @@ public class MJC {
 
         // --- Menu ---
         JMenuBar menuBar = new JMenuBar();
-        JMenu menu = new JMenu("Help");
-        JMenuItem menuItem = new JMenuItem("About");
 
-        menuItem.addActionListener(new ActionListener() {
+        JMenu menuFile = new JMenu("File");
+        JMenuItem menuItemWeProdPath = new JMenuItem("Choose WeProd Path");
+
+        menuItemWeProdPath.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadWeProdPath();
+            }
+        });
+
+        JMenu menuHelp = new JMenu("Help");
+        JMenuItem menuItemAbout = new JMenuItem("About");
+
+        menuItemAbout.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.showMessageDialog(frame,
                         "MultiJobComparator for Nexim\n" +
-                                "© Albert Lännerström 2021\n\n" +
+                                "© Albert Lännerström 2022\n\n" +
                                 "Contact:\n" +
                                 "Albert Lännerström\n" +
                                 "076-8416523\n" +
                                 "albert.lannerstrom@gmail.com\n\n" +
-                                "Version: 1.0.0",
+                                "Version: 1.4.1\n" +
+                                "2022-02-27",
                         "About", JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
-        menu.add(menuItem);
-        menuBar.add(menu);
-
+        menuFile.add(menuItemWeProdPath);
+        menuBar.add(menuFile);
+        menuHelp.add(menuItemAbout);
+        menuBar.add(menuHelp);
 
         // --- Finalizing code ---
-        createFileButton.setMinimumSize(new Dimension(36, 36));
+        createPCBAndProgFileButton.setMinimumSize(new Dimension(36, 36));
+        createReportFileButton.setMinimumSize(new Dimension(36, 36));
 
         frame.add(background);
         frame.setJMenuBar(menuBar);
-        background.add(foreground, "wrap");
-        foreground.add(nextPanel);
-        foreground.add(currentPanel);
-        foreground.add(finishedPanel);
-        background.add(createFileButton);
+        background.add(foregroundUpper, "wrap");
+        background.add(foregroundLower, "wrap");
+        foregroundUpper.add(nextPanel);
+        foregroundUpper.add(currentPanel);
+        foregroundUpper.add(finishedPanel);
+        foregroundLower.add(createPCBAndProgFileButton);
+        foregroundLower.add(createReportFileButton);
         frame.setTitle("MultiJobComparator for Nexim");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
@@ -199,8 +245,21 @@ public class MJC {
         frame.setResizable(false);
         frame.setVisible(true);
 
-        // --- Create File ActionListener ---
-        createFileButton.addActionListener(new ActionListener() {
+        // --- Create PCB & prog. Report File ActionListener ---
+
+        createPCBAndProgFileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (setupMultiJobFile != null) {
+                    createPCBAndProgReport();
+                } else {
+                    JOptionPane.showMessageDialog(frame, "You have not chosen any files yet!", "File error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // --- Create Setup Report File ActionListener ---
+        createReportFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
@@ -215,6 +274,7 @@ public class MJC {
                                         teardownMultiJobFile.getName(),
                                 "Continue?", JOptionPane.YES_NO_OPTION)) {
 
+                            IS_SINGLE_MULTIJOB_SETUP = false;
                             createSetupDoc();
                         }
                     }
@@ -227,8 +287,7 @@ public class MJC {
                                 null,
                                 options, options[0])) {
 
-                            SINGLE_MULTIJOB_SETUP = true;
-                            System.out.println("Test");
+                            IS_SINGLE_MULTIJOB_SETUP = true;
                             createSetupDoc();
                         }
                     } else {
@@ -285,7 +344,7 @@ public class MJC {
     private void loadFile(ActionEvent event) {
         //--- Load previously saved state (if i exists) ---
         try {
-            File loadFile = new File("Support Files/LoadPath.txt");
+            File loadFile = new File(LOAD_PATH_MULTIJOB);
             BufferedReader reader = new BufferedReader(new FileReader(loadFile));
             String line = null;
             if ((line = reader.readLine()) != null) {
@@ -335,7 +394,7 @@ public class MJC {
                 }
                 // --- Save loaded path to loadPath class field ---
                 try {
-                    FileWriter writer = new FileWriter("Support Files/LoadPath.txt");
+                    FileWriter writer = new FileWriter(LOAD_PATH_MULTIJOB);
                     writer.write(file.getParent());
                     loadPath = file.getParent();
                     writer.close();
@@ -373,27 +432,31 @@ public class MJC {
         //Create multijob objects from loaded files
         setupMultiJob = createMultiJobFromHtmlFile(setupMultiJobFile);
 
-        if (!SINGLE_MULTIJOB_SETUP) {
+        if (!IS_SINGLE_MULTIJOB_SETUP) {
 
             inlineMultiJob = createMultiJobFromHtmlFile(inlineMultiJobFile);
             teardownMultiJob = createMultiJobFromHtmlFile(teardownMultiJobFile);
+
             if (setupMultiJob.getNumber() < inlineMultiJob.getNumber() || inlineMultiJob.getNumber() < teardownMultiJob.getNumber()) {
-                JOptionPane.showMessageDialog(frame, "Setup MultiJob number has to be greater than Inline MultiJob number,\n" +
-                                "and (or) Inline MultiJob number has to greater than Teardown MultiJob number:\n\n" +
+                Object[] options = {"OK", "Override"};
+                if (JOptionPane.NO_OPTION != JOptionPane.showOptionDialog(frame, "The Setup MultiJob number must be greater than the Inline MultiJob number,\n" +
+                                "and (or) the Inline MultiJob number must be greater than the Teardown MultiJob number:\n\n" +
                                 "Setup > Inline > Teardown",
                         "Warning",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+                        null,
+                        options, options[0])) {
+                    return;
+                }
             }
         }
 
-
         // --- Create setupdoc and set lists and pages
 
-        if (!SINGLE_MULTIJOB_SETUP) {
+        if (!IS_SINGLE_MULTIJOB_SETUP) {
             setupDoc = new SetupDoc(setupMultiJob.getNumber(), inlineMultiJob.getNumber(), teardownMultiJob.getNumber());
             setupDoc.setTeardownMsdList(createTeardownMsdList(setupMultiJob, inlineMultiJob, teardownMultiJob));
-            setupDoc.setTeardownMsdPage(createTeardownMsdPage(setupDoc.getTeardownMsdList(), teardownMultiJob.getNumber()));
+            setupDoc.setTeardownMsdPage(createTeardownMsdPage(setupDoc.getTeardownMsdList()));
 
             setupDoc.setMatchedList(createMatchedList(setupMultiJob, teardownMultiJob));
             setupDoc.setMatchedPage(createMatchedPage(setupDoc.getMatchedList(), setupMultiJob.getNumber(), teardownMultiJob.getNumber()));
@@ -401,21 +464,21 @@ public class MJC {
             setupDoc = new SetupDoc(setupMultiJob.getNumber());
         }
 
+        setupDoc.setSetupMsdList(createSetupMsdList(setupMultiJob));
+        setupDoc.setSetupMsdPage(createSetupMsdPage(setupDoc.getSetupMsdList()));
+
         createCartListsAndPages();
 
         setupDoc.setTrayList(createTrayList(setupMultiJob));
         setupDoc.setTrayPage(createTrayPage(setupDoc.getTrayList()));
 
-        setupDoc.setExtraList(setupMultiJob.getGroup1());
+        setupDoc.setExtraList(createExtraList(setupMultiJob));
         setupDoc.setExtraPage(createExtraPage(setupDoc.getExtraList()));
-
-        setupDoc.setSetupMsdList(createSetupMsdList(setupMultiJob));
-        setupDoc.setSetupMsdPage(createSetupMsdPage(setupDoc.getSetupMsdList()));
 
         // Create cover page with stats
         setupDoc.setCoverPage(createCoverPage(setupDoc));
 
-        if (!SINGLE_MULTIJOB_SETUP) {
+        if (!IS_SINGLE_MULTIJOB_SETUP) {
             String strElementTeardownMsd = elementToString(setupDoc.getTeardownMsdPage(), "div.page-break");
             String strElementMatched = elementToString(setupDoc.getMatchedPage(), "div.page-break");
 
@@ -438,11 +501,12 @@ public class MJC {
         String strElementSetupMsd = elementToString(setupDoc.getSetupMsdPage(), "div.page-break");
 
         //Set output file name and title
-        if (!SINGLE_MULTIJOB_SETUP) {
-            OUTPUT_FILE_NAME = "MultiJob - " + setupDoc.getSetupMultiJobNumber() + " - " + setupDoc.getInlineMultiJobNumber() + " - " + setupDoc.getTeardownMultiJobNumber();
+        if (!IS_SINGLE_MULTIJOB_SETUP) {
+            OUTPUT_FILE_NAME = "MultiJob - " + setupDoc.getSetupMultiJobNumber() + " - (" + setupDoc.getInlineMultiJobNumber() + " - " + setupDoc.getTeardownMultiJobNumber() + ")";
         } else {
             OUTPUT_FILE_NAME = "MultiJob - " + setupDoc.getSetupMultiJobNumber();
         }
+
         setupDoc.getCoverPage().title(OUTPUT_FILE_NAME);
 
         //Append all HTML-code into the cover page, which will hold all data.
@@ -458,7 +522,7 @@ public class MJC {
         appendElement(strElementTray);
         appendElement(strElementSetupMsd);
 
-        saveFile();
+        saveFile(OUTPUT_FILE_NAME, setupDoc.getCoverPage());
     }
 
     // --- Create multijob and corresponding tables and ArrayLists ---
@@ -479,12 +543,23 @@ public class MJC {
                 MultiJob multiJob = new MultiJob(file.getName(), false, table0, group0);
                 pickDataCellsForGroup(table0, group0);
                 return multiJob;
-            } else if (tables.size() > 1) {
+            } else if (tables.size() == 2) {
                 Element table1 = tables.get(1);
                 ArrayList<Component> group1 = new ArrayList<Component>();
                 MultiJob multiJob = new MultiJob(file.getName(), true, table0, table1, group0, group1);
                 pickDataCellsForGroup(table0, group0);
                 pickDataCellsForGroup(table1, group1);
+                return multiJob;
+            } else if (tables.size() > 2) {
+                Element table1 = tables.get(1);
+                Element table2 = tables.get(2);
+                ArrayList<Component> group1 = new ArrayList<Component>();
+                ArrayList<Component> group2 = new ArrayList<Component>();
+                MultiJob multiJob = new MultiJob(file.getName(), true, table0, table1, table2, group0, group1, group2);
+                pickDataCellsForGroup(table0, group0);
+                pickDataCellsForGroup(table1, group1);
+                pickDataCellsForGroup(table2, group2);
+                group1.addAll(group2);
                 return multiJob;
             } else {
                 JOptionPane.showMessageDialog(frame, "Failed to create MultiJob objects" + "\n\nPlease contact support: \nAlbert Lännerström \n076-8416523 \nalbert.lannerstrom@gmail.com \n", "Error", JOptionPane.ERROR_MESSAGE);
@@ -519,16 +594,18 @@ public class MJC {
         String widthCell = dataCells.get(5).text();
         String feederNameCell = dataCells.get(6).text();
         String qtyCell = dataCells.get(7).text();
-        Component c = new Component(positionCell, resultCell, partNumberCell, partCommentCell, typeCell, widthCell, feederNameCell, qtyCell, false, false);
+        Component c = new Component(positionCell, resultCell, partNumberCell, partCommentCell, typeCell, widthCell, feederNameCell, qtyCell, false, false, false);
         group.add(c);
     }
 
     private void flagDuplicates(ArrayList<Component> group) {
         for (int i = 0; i < group.size(); i++) {
             for (int j = i + 1; j < group.size(); j++) {
-                if (group.get(i).getPartNumber().equals(group.get(j).getPartNumber())) {
-                    group.get(i).setDuplicate(true);
-                    group.get(j).setDuplicate(true);
+                if (group.get(i).getPartNumber().length() > 0) {
+                    if (group.get(i).getPartNumber().equals(group.get(j).getPartNumber())) {
+                        group.get(i).setDuplicate(true);
+                        group.get(j).setDuplicate(true);
+                    }
                 }
             }
         }
@@ -548,42 +625,51 @@ public class MJC {
 
 
     // --- Create a list for MSD components. Some to be saved in CABINET and some to be removed ---
-    private ArrayList<Component> createTeardownMsdList(MultiJob newMultiJob, MultiJob currentMultiJob, MultiJob oldMultiJob) {
-        ArrayList<Component> newMsdList = filterMsds(newMultiJob);
-        ArrayList<Component> currentMsdList = filterMsds(currentMultiJob);
-        ArrayList<Component> oldMsdList = filterMsds(oldMultiJob);
+    private ArrayList<Component> createTeardownMsdList(MultiJob setupMultiJob, MultiJob inlineMultiJob, MultiJob teardownMultiJob) {
+        ArrayList<Component> setupMsdList = filterMsds(setupMultiJob);
+        ArrayList<Component> inlineMsdList = filterMsds(inlineMultiJob);
+        ArrayList<Component> teardownMsdList = filterMsds(teardownMultiJob);
 
-        ArrayList<Component> teardownMsdList = new ArrayList<Component>();
-
-        for (Component oldComp : oldMsdList) {
-            if (oldComp.getPartComment().contains(FAST_KEY)) {
-                oldComp.setResult(CABINET_KEY);
+        ArrayList<Component> msdList = new ArrayList<Component>();
+        int i = 0;
+        //Loop all teardown MSDs
+        for (Component teardownComp : teardownMsdList) {
+            // Check if the teardown MSD is a "FAST" MSD, and if that is the case then set the result/action to "To Cabinet"
+            if (teardownComp.getPartComment().contains(FAST_KEY)) {
+                teardownComp.setResult(CABINET_KEY);
             } else {
-                for (Component newComp : newMsdList) {
-                    if (!newComp.getPartComment().contains(FAST_KEY)) {
-                        if (oldComp.getPartNumber().equals(newComp.getPartNumber())) {
-                            oldComp.setResult(CABINET_KEY);
-                            newComp.setResult(SAVED_CABINET_KEY);
+                // If false, loop through the setup MSDs
+                for (Component setupComp : setupMsdList) {
+                    //If the setup MSD isn't a "FAST" MSD, check if the teardown and setup MSDs match, and if that is true change result/action accordingly
+                    if (!setupComp.getPartComment().contains(FAST_KEY)) {
+                        if (teardownComp.getPartNumber().equals(setupComp.getPartNumber())) {
+                            teardownComp.setResult(CABINET_KEY);
                             break;
-                        } else {
-                            oldComp.setResult(STORAGE_KEY);
                         }
                     }
                 }
-                for (Component currComp : currentMsdList) {
-                    if (!currComp.getPartComment().contains(FAST_KEY)) {
-                        if (oldComp.getPartNumber().equals(currComp.getPartNumber())) {
-                            oldComp.setResult(CABINET_KEY);
+                //Loop through all inline MSDs
+                for (Component inlineComp : inlineMsdList) {
+                    //If inline MSD isn't a "FAST" MSD, check if the teardown and inline MSDs match, and set teardown MDS result/action to "To cabinet"
+                    if (!inlineComp.getPartComment().contains(FAST_KEY)) {
+                        if (teardownComp.getPartNumber().equals(inlineComp.getPartNumber())) {
+                            teardownComp.setResult(CABINET_KEY);
                             break;
-                        } else if (!oldComp.getResult().equals(CABINET_KEY)) {
-                            oldComp.setResult(STORAGE_KEY);
                         }
                     }
                 }
             }
-            teardownMsdList.add(oldComp);
+            //If no match with setup or inline, make sure the teardown MSD isn't already set to "To cabinet", and if not, set result/action to "To storage"
+            if (!teardownComp.getResult().equals(CABINET_KEY)) {
+                teardownComp.setResult(STORAGE_KEY);
+            }
+            //Add the MSD to the teardown list after result/action has been updated
+            msdList.add(teardownComp);
+            i++;
         }
-        return teardownMsdList;
+
+        MSD_TEARDOWN_AMOUNT = i;
+        return msdList;
     }
 
     // --- Filter out MSD components from list ---
@@ -597,7 +683,8 @@ public class MJC {
 
         if (multiJob.hasExtraGroup()) {
             for (Component c : multiJob.getGroup1()) {
-                if (c.getPartComment().contains(MSD_KEY)) {
+                if (c.getPartComment().contains(MSD_KEY) && c.getPosition().length() < TRAY_LENGTH_KEY) {
+                    c.setExtra(true);
                     msdList.add(c);
                 }
             }
@@ -605,10 +692,11 @@ public class MJC {
         return msdList;
     }
 
-    private Document createTeardownMsdPage(ArrayList<Component> teardownMsdList, int oldMultiJobNumber) {
+    private Document createTeardownMsdPage(ArrayList<Component> teardownMsdList) {
         Document doc = getHtmlTemplate(TEARDOWNMSD_TEMPLATE_PATH);
 
-        String title = "Teardown MSD list - from #" + oldMultiJobNumber;
+        String writtenText = doc.select("div.t1").first().text();
+        String title = writtenText + " - from #" + teardownMultiJob.getNumber();
         doc.select("div.t1").first().text(title);
 
         Element tbody = doc.select("tbody").first();
@@ -617,24 +705,37 @@ public class MJC {
             if (c.isMatched()) {
                 result = "Saved";
             }
-            String other = "&nbsp;";
+
+            String position = c.getPosition();
+            if (c.isExtra()) {
+                position = c.getPosition() + " / Extra";
+            }
+
+            String comment = "&nbsp;";
             if (c.isDuplicate()) {
-                other = "Duplicate";
+                comment = "Duplicate";
+            }
+
+            String locNo = "N/A";
+            if (ifsPartMap.get(c.getPartNumber()) != null) {
+                locNo = ifsPartMap.get(c.getPartNumber());
+
             }
             tbody.append("<tr>" +
-                    "<td>" + c.getPosition() + "</td>" +
+                    "<td>" + position + "</td>" +
                     "<td>" + c.getPartNumber() + "</td>" +
                     "<td>" + result + "" + "</td>" +
-                    "<td>" + "&nbsp;" + "</td>" +
+                    "<td><input type=\"checkbox\"></td>" +
+                    "<td>" + comment + "</td>" +
                     "<td>" + c.getPartComment() + "</td>" +
-                    "<td>" + other + "</td>" +
+                    "<td>" + locNo + "</td>" +
                     "<td>" + c.getType() + "</td>" +
                     "<td align=\"right\">" + c.getWidth() + "</td>" +
                     "</tr>");
         }
         doc.select("tr:contains(MSD)").attr("class", "msd");
         doc.select("tr:contains(MSD)").select("tr:contains(FAST)").attr("class", "fast-msd"); //"FAST" MSDs
-        doc.select("tr:contains(Duplicate)").attr("class", "duplicate");
+        doc.select("td:contains(Duplicate)").attr("class", "duplicate");
         doc.select("tr:contains(" + STORAGE_KEY + ")").select("tr:not(" + FAST_KEY + ")").attr("class", "msd2"); //MSDs to remove to storage
         return doc;
     }
@@ -643,35 +744,35 @@ public class MJC {
     private ArrayList<Component> createMatchedList(MultiJob newMultiJob, MultiJob oldMultiJob) {
         ArrayList<Component> matchedGroup = new ArrayList<Component>();
         int i = 0;
-        for (Component cNew : newMultiJob.getGroup0()) {
+        for (Component compNew : newMultiJob.getGroup0()) {
             //Look for matching component number omitting "FASTMATARE", MSDs, tray components, and already matched components
-            if (cNew.getPartComment().contains(FAST_KEY)
-                    || cNew.getPartComment().contains(MSD_KEY)
-                    || cNew.getPosition().length() > TRAY_LENGTH_KEY) {
+            if (compNew.getPartComment().contains(FAST_KEY)
+                    || compNew.getPartComment().contains(MSD_KEY)
+                    || compNew.getPosition().length() > TRAY_LENGTH_KEY) {
                 continue;
             } else {
-                for (Component cOld : oldMultiJob.getGroup0()) {
-                    if (cNew.getPartNumber().equals(cOld.getPartNumber())
-                            && !cOld.isMatched()) {
-                        cNew.setMatched(true);
-                        cNew.setResult("Save");
-                        cOld.setMatched(true);
-                        cNew.setOldPosition(cOld.getPosition());
-                        matchedGroup.add(cNew);
+                for (Component compOld : oldMultiJob.getGroup0()) {
+                    if (compNew.getPartNumber().equals(compOld.getPartNumber())
+                            && !compOld.isMatched()) {
+                        compNew.setMatched(true);
+                        compNew.setResult("Save");
+                        compOld.setMatched(true);
+                        compNew.setOldPosition(compOld.getPosition());
+                        matchedGroup.add(compNew);
                         i++;
                         break;
                     }
                 }
 
                 if (oldMultiJob.hasExtraGroup())
-                    for (Component cOld : oldMultiJob.getGroup1()) {
-                        if (cNew.getPartNumber().equals(cOld.getPartNumber())
-                                && !cOld.isMatched() && !cNew.isMatched()) {
-                            cNew.setMatched(true);
-                            cNew.setResult("Save");
-                            cOld.setMatched(true);
-                            cNew.setOldPosition(cOld.getPosition() + " / Extra");
-                            matchedGroup.add(cNew);
+                    for (Component compOld : oldMultiJob.getGroup1()) {
+                        if (compNew.getPartNumber().equals(compOld.getPartNumber())
+                                && !compOld.isMatched() && !compNew.isMatched()) {
+                            compNew.setMatched(true);
+                            compNew.setResult("Save");
+                            compOld.setMatched(true);
+                            compNew.setOldPosition(compOld.getPosition() + " / Extra");
+                            matchedGroup.add(compNew);
                             i++;
                             break;
                         }
@@ -695,6 +796,7 @@ public class MJC {
                     "<td>" + c.getOldPosition() + "</td>" +
                     "<td>" + c.getPartNumber() + "</td>" +
                     "<td>" + c.getResult() + "" + "</td>" +
+                    "<td><input type=\"checkbox\"></td>" +
                     "<td>" + "&nbsp;" + "</td>" +
                     "<td>" + c.getPartComment() + "</td>" +
                     "<td>" + c.getPosition() + "</td>" +
@@ -702,6 +804,7 @@ public class MJC {
                     "<td align=\"right\">" + c.getWidth() + "</td>" +
                     "</tr>");
             int j = i + 1;
+            //Create empty row if next component is of a new cart number
             if (j < matchedList.size()) {
                 Component cNext = matchedList.get(j);
                 if (!(c.getCartNumber().equals(cNext.getCartNumber()))) {
@@ -720,6 +823,119 @@ public class MJC {
         }
 
         doc.select("tr:contains(Save)").attr("class", "matched");
+
+        return doc;
+    }
+
+    private ArrayList<Component> createSetupMsdList(MultiJob setupMultiJob) {
+        ArrayList<Component> setupMsdList = filterMsds(setupMultiJob);
+        ArrayList<Component> inlineMsdList = null;
+        ArrayList<Component> teardownMsdList = null;
+
+        ArrayList<Component> componentList = new ArrayList<Component>();
+        componentList.addAll(setupMultiJob.getGroup0());
+        if (setupMultiJob.hasExtraGroup()) {
+            for (Component c : setupMultiJob.getGroup1()) {
+                if (c.getPartComment().contains(MSD_KEY) && c.getPosition().length() < TRAY_LENGTH_KEY) {
+                    componentList.add(c);
+                    c.setExtra(true);
+                }
+            }
+        }
+
+        if (!IS_SINGLE_MULTIJOB_SETUP) {
+            inlineMsdList = filterMsds(inlineMultiJob);
+            teardownMsdList = filterMsds(teardownMultiJob);
+        }
+        ArrayList<Component> msdList = new ArrayList<Component>();
+        int i = 0;
+        for (Component setupComp : setupMsdList) {
+            if (inlineMsdList != null) {
+                for (Component inlineComp : inlineMsdList) {
+                    if (!inlineComp.getPartComment().contains(FAST_KEY)) {
+                        if (inlineComp.getPartNumber().equals(setupComp.getPartNumber())) {
+                            setupComp.setResult(SAVED_CABINET_KEY);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (teardownMsdList != null) {
+                for (Component teardownComp : teardownMsdList) {
+                    if (!teardownComp.getPartComment().contains(FAST_KEY)) {
+                        if (teardownComp.getPartNumber().equals(setupComp.getPartNumber())) {
+                            setupComp.setResult(SAVED_CABINET_KEY);
+                            break;
+                        }
+                    }
+                }
+            }
+            msdList.add(setupComp);
+            i++;
+
+            //Set the result/action of main setup group list MSDs. (Otherwise all non "FAST" MSDs in the cart pages wil have the same result/action)
+            for (Component c : componentList) {
+                if (c.getPartComment().contains(MSD_KEY) && c.getPosition().length() < TRAY_LENGTH_KEY) {
+                    if (!c.getPartComment().contains(FAST_KEY)) {
+                        if (c.getPartNumber().equals(setupComp.getPartNumber())) {
+                            c.setResult(setupComp.getResult());
+                        }
+                    }
+                }
+            }
+        }
+
+        MSD_SETUP_AMOUNT = i;
+        return msdList;
+    }
+
+    private Document createSetupMsdPage(ArrayList<Component> msdList) {
+        Document doc = getHtmlTemplate(MSD_TEMPLATE_PATH);
+
+        String writtenText = doc.select("div.t1").first().text();
+        String title = writtenText + " - #" + setupMultiJob.getNumber();
+        doc.select("div.t1").first().text(title);
+
+        Element tbody = doc.select("tbody").first();
+        for (Component c : msdList) {
+            String result = c.getResult();
+
+            String position = c.getPosition();
+            if (c.isExtra()) {
+                position = c.getPosition() + " / Extra";
+            }
+
+            String comment = "&nbsp;";
+            if (c.isDuplicate()) {
+                comment = "Duplicate";
+            }
+
+            String locNo = "N/A";
+            if (ifsPartMap.get(c.getPartNumber()) != null) {
+                locNo = ifsPartMap.get(c.getPartNumber());
+            }
+
+            tbody.append("<tr>" +
+                    "<td>" + position + "</td>" +
+                    "<td>" + c.getPartNumber() + "</td>" +
+                    "<td>" + result + "" + "</td>" +
+                    "<td><input type=\"checkbox\"></td>" +
+                    "<td>" + comment + "</td>" +
+                    "<td>" + c.getPartComment() + "</td>" +
+                    "<td>" + locNo + "</td>" +
+                    "<td>" + c.getType() + "</td>" +
+                    "<td align=\"right\">" + c.getWidth() + "</td>" +
+                    "</tr>");
+
+            if (!c.getPartComment().equals("")) {
+                doc.select("tr").last().attr("class", "comment");
+            }
+        }
+
+        doc.select("tr:contains(MSD)").attr("class", "msd2"); //MSDs to get from storage
+        doc.select("tr:contains(MSD)").select("tr:contains(FAST)").attr("class", "fast-msd"); //"FAST" MSDs
+        doc.select("td:contains(Duplicate)").attr("class", "duplicate");
+        doc.select("tr:contains(" + SAVED_CABINET_KEY + ")").select("tr:not(" + FAST_KEY + ")").attr("class", "msd"); //Saved MSDs
 
         return doc;
     }
@@ -780,19 +996,47 @@ public class MJC {
             if (c.isMatched()) {
                 result = "Saved";
             }
-            String other = "&nbsp;";
+
+            String comment = "&nbsp;";
             if (c.isDuplicate()) {
-                other = "Duplicate";
+                comment = "Duplicate";
             }
-            tbody.append("<tr>" +
+
+            String locNo = "N/A";
+            if (ifsPartMap.get(c.getPartNumber()) != null) {
+                locNo = ifsPartMap.get(c.getPartNumber());
+            }
+
+            int width = Integer.parseInt(c.getWidth());
+            String lineHeight = "16";
+            if (width == 12) {
+                lineHeight = "32";
+            } else if (width == 16) {
+                lineHeight = "32";
+            } else if (width == 24) {
+                lineHeight = "48";
+            } else if (width == 32) {
+                lineHeight = "64";
+            } else if (width == 44) {
+                lineHeight = "88";
+            } else if (width == 56) {
+                lineHeight = "112";
+            } else if (width == 72) {
+                lineHeight = "144";
+            } else if (width == 88) {
+                lineHeight = "176";
+            }
+
+            tbody.append("<tr style=\"line-height: " + lineHeight + "px;\">" +
                     "<td>" + c.getPosition() + "</td>" +
                     "<td>" + c.getPartNumber() + "</td>" +
-                    "<td>" + result + "" + "</td>" +
-                    "<td>" + "&nbsp;" + "</td>" +
+                    "<td>" + result + "</td>" +
+                    "<td><input type=\"checkbox\"></td>" +
+                    "<td>" + comment + "</td>" +
                     "<td>" + c.getPartComment() + "</td>" +
-                    "<td>" + other + "</td>" +
+                    "<td>" + locNo + "</td>" +
                     "<td>" + c.getType() + "</td>" +
-                    "<td align=\"right\">" + c.getWidth() + "</td>" +
+                    "<td align=\"right\">" + width + "</td>" +
                     "</tr>");
 
             if (!c.getPartComment().equals("")) {
@@ -802,13 +1046,14 @@ public class MJC {
         }
 
         doc.select("tr:contains(FASTMATARE)").attr("class", "fast");
-        doc.select("tr:contains(Duplicate)").attr("class", "duplicate");
         doc.select("tr:contains(Saved)").attr("class", "matched");
         doc.select("tr:contains(MSD)").attr("class", "msd2");
         doc.select("tr:contains(MSD)").select("tr:contains(FAST)").attr("class", "fast-msd"); //"FAST" MSDs
         doc.select("tr:contains(" + SAVED_CABINET_KEY + ")").select("tr:not(" + FAST_KEY + ")").attr("class", "msd"); //Saved MSDs
-        doc.select("tr:contains(Use)").attr("class", "comment");
-        doc.select("tr:contains(USE)").attr("class", "comment");
+        // doc.select("tr:contains(Duplicate)").attr("class", "duplicate");
+        doc.select("td:contains(Duplicate)").attr("class", "duplicate");
+        doc.select("td:contains(Use)").attr("class", "comment");
+        doc.select("td:contains(USE)").attr("class", "comment");
 
         return doc;
     }
@@ -847,19 +1092,26 @@ public class MJC {
             if (c.getPosition().contains("B")) {
                 tbody = doc.select("tbody").last();
             }
-            String other = "&nbsp;";
+
+            String comment = "&nbsp;";
             if (c.isDuplicate()) {
-                other = "Duplicate";
+                comment = "Duplicate";
             }
+
+            String locNo = "N/A";
+            if (ifsPartMap.get(c.getPartNumber()) != null) {
+                locNo = ifsPartMap.get(c.getPartNumber());
+            }
+
             tbody.append("<tr>" +
                     "<td>" + c.getPosition() + "</td>" +
                     "<td>" + c.getPartNumber() + "</td>" +
                     "<td>" + c.getResult() + "" + "</td>" +
-                    "<td>" + "&nbsp;" + "</td>" +
+                    "<td><input type=\"checkbox\"></td>" +
+                    "<td>" + comment + "</td>" +
                     "<td>" + c.getPartComment() + "</td>" +
-                    "<td>" + other + "</td>" +
+                    "<td>" + locNo + "</td>" +
                     "<td>" + c.getType() + "</td>" +
-                    "<td align=\"right\">" + c.getWidth() + "</td>" +
                     "</tr>");
 
             if (!c.getPartComment().equals("")) {
@@ -868,15 +1120,33 @@ public class MJC {
 
         }
 
-        doc.select("tr:contains(MSD)").attr("class", "msd2"); //MSDs to get from storage
-        doc.select("tr:contains(MSD)").select("tr:contains(FAST)").attr("class", "fast-msd"); //"FAST" MSDs
-        doc.select("tr:contains(Duplicate)").attr("class", "duplicate");
+        doc.select("tr:contains(MSD)").attr("class", "msd2"); //MSD trays to get from storage
+        doc.select("tr:contains(PROG)").attr("class", "msd"); //Programmed MSD-trays
+        doc.select("tr:contains(MSD)").select("tr:contains(FAST)").attr("class", "fast-msd"); //"FAST" MSD trays
+        doc.select("td:contains(Duplicate)").attr("class", "duplicate");
 
         return doc;
     }
 
+    private ArrayList<Component> createExtraList(MultiJob multiJob) {
+        if (multiJob.hasExtraGroup()) {
+            ArrayList<Component> extraList = new ArrayList<Component>();
+            int i = 0;
+            for (Component c : setupMultiJob.getGroup1()) {
+                extraList.add(c);
+                if (!c.getPartNumber().equals("")) {
+                    i++;
+                }
+            }
+            EXTRA_AMOUNT = i;
+            COMPONENT_AMOUNT += i;
+            return extraList;
+        }
+        return null;
+    }
+
     private Document createExtraPage(ArrayList<Component> extraList) {
-        if (extraList == null) {
+        if (!setupMultiJob.hasExtraGroup()) {
             return null;
         }
         Document doc = getHtmlTemplate(EXTRA_TEMPLATE_PATH);
@@ -887,17 +1157,25 @@ public class MJC {
             if (c.isMatched()) {
                 result = "Saved";
             }
-            String other = "&nbsp;";
+
+            String comment = "&nbsp;";
             if (c.isDuplicate()) {
-                other = "Duplicate";
+                comment = "Duplicate";
             }
+
+            String locNo = "N/A";
+            if (ifsPartMap.get(c.getPartNumber()) != null) {
+                locNo = ifsPartMap.get(c.getPartNumber());
+            }
+
             tbody.append("<tr>" +
                     "<td>" + c.getPosition() + "</td>" +
                     "<td>" + c.getPartNumber() + "</td>" +
                     "<td>" + result + "" + "</td>" +
-                    "<td>" + "&nbsp;" + "</td>" +
+                    "<td><input type=\"checkbox\"></td>" +
+                    "<td>" + comment + "</td>" +
                     "<td>" + c.getPartComment() + "</td>" +
-                    "<td>" + other + "</td>" +
+                    "<td>" + locNo + "</td>" +
                     "<td>" + c.getType() + "</td>" +
                     "<td align=\"right\">" + c.getWidth() + "</td>" +
                     "</tr>");
@@ -908,70 +1186,13 @@ public class MJC {
         }
 
         doc.select("tr:contains(FASTMATARE)").attr("class", "fast");
-        doc.select("tr:contains(Duplicate)").attr("class", "duplicate");
         doc.select("tr:contains(Saved)").attr("class", "matched");
-        doc.select("tr:contains(MSD)").attr("class", "msd");
-
-        return doc;
-    }
-
-    private ArrayList<Component> createSetupMsdList(MultiJob multiJob) {
-        ArrayList<Component> setupMsdList = filterMsds(multiJob);
-        ArrayList<Component> inlineMsdList = null;
-        if (!SINGLE_MULTIJOB_SETUP) {
-            inlineMsdList = filterMsds(inlineMultiJob);
-        }
-        ArrayList<Component> msdList = new ArrayList<Component>();
-        int i = 0;
-        for (Component setupC : setupMsdList) {
-            if (inlineMsdList != null) {
-                for (Component inlineC : inlineMsdList) {
-                    if (!inlineC.getPartComment().contains(FAST_KEY)) {
-                        if (inlineC.getPartNumber().equals(setupC.getPartNumber())) {
-                            setupC.setResult(SAVED_CABINET_KEY);
-                            break;
-                        }
-                    }
-                }
-            }
-            msdList.add(setupC);
-            i++;
-        }
-
-        MSD_AMOUNT = i;
-        return msdList;
-    }
-
-    private Document createSetupMsdPage(ArrayList<Component> msdList) {
-        Document doc = getHtmlTemplate(MSD_TEMPLATE_PATH);
-
-        Element tbody = doc.select("tbody").first();
-        for (Component c : msdList) {
-            String result = c.getResult();
-            String other = "&nbsp;";
-            if (c.isDuplicate()) {
-                other = "Duplicate";
-            }
-            tbody.append("<tr>" +
-                    "<td>" + c.getPosition() + "</td>" +
-                    "<td>" + c.getPartNumber() + "</td>" +
-                    "<td>" + result + "" + "</td>" +
-                    "<td>" + "&nbsp;" + "</td>" +
-                    "<td>" + c.getPartComment() + "</td>" +
-                    "<td>" + other + "</td>" +
-                    "<td>" + c.getType() + "</td>" +
-                    "<td align=\"right\">" + c.getWidth() + "</td>" +
-                    "</tr>");
-
-            if (!c.getPartComment().equals("")) {
-                doc.select("tr").last().attr("class", "comment");
-            }
-        }
-
-        doc.select("tr:contains(MSD)").attr("class", "msd2"); //MSDs to get from storage
+        doc.select("tr:contains(MSD)").attr("class", "msd2");
         doc.select("tr:contains(MSD)").select("tr:contains(FAST)").attr("class", "fast-msd"); //"FAST" MSDs
-        doc.select("tr:contains(Duplicate)").attr("class", "duplicate");
         doc.select("tr:contains(" + SAVED_CABINET_KEY + ")").select("tr:not(" + FAST_KEY + ")").attr("class", "msd"); //Saved MSDs
+        doc.select("td:contains(Duplicate)").attr("class", "duplicate");
+        doc.select("td:contains(Use)").attr("class", "comment");
+        doc.select("td:contains(USE)").attr("class", "comment");
 
         return doc;
     }
@@ -1010,41 +1231,31 @@ public class MJC {
         FASTMATARE_AMOUNT = i;
     }
 
-    private void countExtra(MultiJob multiJob) {
-        if (multiJob.hasExtraGroup()) {
-            int i = 0;
-            for (Component c : multiJob.getGroup1()) {
-                i++;
-            }
-            EXTRA_AMOUNT = i;
-            COMPONENT_AMOUNT += i;
-        }
-    }
-
     private Document createCoverPage(SetupDoc setupDoc) {
         Document doc = getHtmlTemplate(COVER_PAGE_PATH);
 
-        String setupMultiJobNumber = "#" + Integer.toString(setupDoc.getSetupMultiJobNumber());
+        String setupMultiJobNumber = "#" + (setupDoc.getSetupMultiJobNumber());
         doc.select("div.main-multi-job").first().text(setupMultiJobNumber);
-        if (!SINGLE_MULTIJOB_SETUP) {
-            String inlineMultiJobNumber = "#" + Integer.toString(setupDoc.getInlineMultiJobNumber());
-            String teardownMultiJobNumber = "#" + Integer.toString(setupDoc.getTeardownMultiJobNumber());
+        if (!IS_SINGLE_MULTIJOB_SETUP) {
+            String inlineMultiJobNumber = "#" + (setupDoc.getInlineMultiJobNumber());
+            String teardownMultiJobNumber = "#" + (setupDoc.getTeardownMultiJobNumber());
             doc.select("td:contains(Inline) + td").first().text(inlineMultiJobNumber);
             doc.select("td:contains(Teardown) + td").first().text(teardownMultiJobNumber);
+            doc.select("td:contains(MSDs in teardown) + td").first().text(Integer.toString(MSD_TEARDOWN_AMOUNT));
         } else {
             doc.select("td:contains(Inline) + td").first().text("N/A");
             doc.select("td:contains(Teardown) + td").first().text("N/A");
+            doc.select("td:contains(MSDs in teardown) + td").first().text("N/A");
         }
 
         countFASTMATARE(setupMultiJob);
         countDuplicates(setupMultiJob);
-        countExtra(setupMultiJob);
 
-        doc.select("td:contains(MSDs in setup) + td").first().text(Integer.toString(MSD_AMOUNT));
+        doc.select("td:contains(MSDs in setup) + td").first().text(Integer.toString(MSD_SETUP_AMOUNT));
         doc.select("td:contains(FASTMATARE) + td").first().text(Integer.toString(FASTMATARE_AMOUNT));
         doc.select("td:contains(Duplicates) + td").first().text(Integer.toString(DUPLICATE_AMOUNT));
         doc.select("td:contains(Trays) + td").first().text(Integer.toString(TRAY_AMOUNT));
-        doc.select("td:contains(Group 1 (extra)) + td").first().text(Integer.toString(EXTRA_AMOUNT));
+        doc.select("td:contains(Extra feeders) + td").first().text(Integer.toString(EXTRA_AMOUNT));
         doc.select("td:contains(Saved feeders) + td").first().text(Integer.toString(MATCHED_AMOUNT));
         doc.select("td:contains(Total components) + td").first().text(Integer.toString(COMPONENT_AMOUNT));
 
@@ -1067,7 +1278,7 @@ public class MJC {
         }
     }
 
-    private void saveFile() {
+    private void saveFile(String outputFileName, Document outputDoc) {
         //--- Load previously saved state (if i exists) ---
         try {
             File saveFile = new File("Support Files/SavePath.txt");
@@ -1091,7 +1302,7 @@ public class MJC {
             FileNameExtensionFilter filter = new FileNameExtensionFilter(".html, .htm", "htm", "html");
             fileSave.setCurrentDirectory(path);
             fileSave.setFileFilter(filter);
-            fileSave.setSelectedFile(new File(savePath + "/" + OUTPUT_FILE_NAME + ".html"));
+            fileSave.setSelectedFile(new File(savePath + "/" + outputFileName + ".html"));
 
             // --- Sorting ---
             Action details = fileSave.getActionMap().get("viewTypeDetails");
@@ -1116,7 +1327,7 @@ public class MJC {
                 try {
                     //Write the complete HTML-file
                     FileWriter writer = new FileWriter(outputFile);
-                    writer.write(setupDoc.getCoverPage().toString());
+                    writer.write(outputDoc.toString());
                     writer.close();
                     JOptionPane.showMessageDialog(frame, "File saved in chosen folder! \n" + outputFile.getName(), "File saved", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
@@ -1131,4 +1342,231 @@ public class MJC {
             ex.printStackTrace();
         }
     }
+
+    private void getComponentDataFromIfs() {
+        ifsPartMap = new HashMap<>();
+        String partNo = null;
+        String locNo = null;
+
+        try {
+            BufferedReader csvReader = new BufferedReader(new FileReader(COMPONENTS_IFS_CSV_PATH));
+            String row = null;
+            while ((row = csvReader.readLine()) != null) {
+                try {
+                    String[] data = row.split(";");
+                    partNo = data[0];
+                    locNo = data[1];
+                    ifsPartMap.put(partNo, locNo);
+                } catch (ArrayIndexOutOfBoundsException ex) {
+                    continue;
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Could not load IFS Component/Location storage list,\n" +
+                    "or \"" + COMPONENTS_IFS_CSV_PATH + "\" is missing." +
+                    "\n" +
+                    "All IFS Location data will be printed as \"N/A\"", "Could not load IFS Component/Location storage list", JOptionPane.WARNING_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+
+    private void createPCBAndProgReport() {
+        ArrayList<WeProdJob> weProdJobList = new ArrayList<WeProdJob>();
+
+        try {
+
+            //Get file name from chosen "Setup Multi Job Family"
+            String jobFileName = setupMultiJobFile.getName();
+            String jobName = jobFileName.substring(0, jobFileName.lastIndexOf('.'));
+            String jobNumber = jobName.replaceAll("[^\\d]", "");
+
+            getWeProdPath();
+
+            //Parse XML file with JSoup
+            File file = new File(loadPathWeProd + "/" + jobName + ".xml");
+            FileInputStream fis = new FileInputStream(file);
+            Document doc = Jsoup.parse(fis, null, "", Parser.xmlParser());
+
+            //Choose all SmtJob elements
+            Elements smtJobInfoCollection = doc.select("SmtJobInformationDto");
+
+            for (Element smtJobInfo : smtJobInfoCollection) {
+
+
+                //Get data from XML file
+                int orderNumber = Integer.parseInt(smtJobInfo.select("OrderNumber").text());
+                String articleNumber = smtJobInfo.select("ArticleNumber").text();
+                int operationNumber = Integer.parseInt(smtJobInfo.select("OperationNumber").text());
+                int quantity = Integer.parseInt(smtJobInfo.select("QuantityDue").text());
+                String pcbArticleNumber = smtJobInfo.select("PcbArticleNumber").text();
+                String pcbStorageLocation = smtJobInfo.select("PcbStorageLocation").text();
+                String jobPasteType = smtJobInfo.select("JobPasteType").text();
+                String programmedCircuit1 = smtJobInfo.select("ProgrammedCircuit1").text();
+                String program1 = smtJobInfo.select("Program1").text();
+                String programmedCircuit2 = smtJobInfo.select("ProgrammedCircuit2").text();
+                String program2 = smtJobInfo.select("Program2").text();
+                String additionalInfo = smtJobInfo.select("AdditionalInformation").text();
+                String userSuppliedComment = smtJobInfo.select("UsersuppliedComment").text();
+
+                //Create a job object containing all relevant information
+                WeProdJob weProdJob = new WeProdJob(
+                        orderNumber,
+                        articleNumber,
+                        operationNumber,
+                        quantity,
+                        pcbArticleNumber,
+                        pcbStorageLocation,
+                        jobPasteType,
+                        programmedCircuit1,
+                        program1,
+                        programmedCircuit2,
+                        program2,
+                        additionalInfo,
+                        userSuppliedComment
+                );
+
+                weProdJobList.add(weProdJob);
+            }
+
+            Document pcbAndProgPage = createPCBPage(weProdJobList);
+            String programString = createProgPage(weProdJobList);
+
+            if (programString != null) {
+                pcbAndProgPage.select("div").first().append(programString);
+                CONTAINS_PROG = true;
+            }
+
+            pcbAndProgPage.title("PCB & Programming list - #" + jobNumber);
+
+            pcbAndProgPage.select("div.t1").first().appendText(jobNumber);
+            if (CONTAINS_PROG) {
+                pcbAndProgPage.select("div.t1").last().appendText(jobNumber);
+            }
+
+            CONTAINS_PROG = false;
+
+            saveFile("MultiJob - " + jobNumber + " - PCBs & Programming", pcbAndProgPage);
+
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Could not find requested multi job file in the \"TempDataStore\" folder. You have to create the given multi job in WeProd before using this function. \n\nMake sure you are using the following naming convention: \"Multijob-100\" \n\nIf the previous steps doesn't solve this error, then make sure MJC is looking in the correct folder. Go to \"File -> Choose WeProd Path\", and choose the following path: \"Produktion/Production Monitor/util/TempDataStore\"", "Could not load MultiJob file", JOptionPane.WARNING_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    private void getWeProdPath() {
+        //--- Load previously saved state (if it exists) ---
+        try {
+            File loadFile = new File(LOAD_PATH_WEPROD);
+            BufferedReader reader = new BufferedReader(new FileReader(loadFile));
+            String line = null;
+            if ((line = reader.readLine()) != null) {
+                loadPathWeProd = line;
+            }
+            reader.close();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Could not load previously saved file path! \"Support Files/LoadPathWeProd.txt\" is missing. Go to \"File -> Choose WeProd Path\" and locate the correct folder. \"Produktion/Production Monitor/util/TempDataStore\"", "Could not load file path", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void loadWeProdPath() {
+
+        getWeProdPath();
+
+        //--- Main code ---
+        try {
+            //Get path
+            File path = new File(loadPathWeProd);
+            //Create file chooser
+            JFileChooser fileOpen = new JFileChooser();
+            fileOpen.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fileOpen.setCurrentDirectory(path);
+
+            // --- Sorting ---
+            Action details = fileOpen.getActionMap().get("viewTypeDetails");
+            details.actionPerformed(null);
+
+            if (fileOpen.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                File file = fileOpen.getSelectedFile();
+                if (file != null) {
+                    loadPathWeProd = file.getAbsolutePath();
+                    try {
+                        // --- Save loaded path to loadPath class field ---
+                        FileWriter writer = new FileWriter(LOAD_PATH_WEPROD);
+                        writer.write(loadPathWeProd);
+                        writer.close();
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(frame, "Could not save file path!", "Error", JOptionPane.ERROR_MESSAGE);
+                        ex.printStackTrace();
+                    }
+                }
+
+            }
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Could not open file chooser dialog or could not locate path folder", "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+
+    }
+
+    private Document createPCBPage(ArrayList<WeProdJob> jobList) {
+        Document doc = getHtmlTemplate(PCB_TEMPLATE_PATH);
+
+        Element tbody = doc.select("tbody").first();
+        for (WeProdJob job : jobList) {
+            if (job.getOperationNumber() == 10 || job.getOperationNumber() == 11)
+
+                tbody.append("<tr>" +
+                        "<td>" + job.getOrderNumber() + "</td>" +
+                        "<td>" + job.getArticleNumber() + "</td>" +
+                        "<td>" + job.getPcbStorageLocation() + "</td>" +
+                        "<td>" + job.getPcbArticleNumber() + "</td>" +
+                        "<td>" + job.getQuantity() + "</td>" +
+                        "<td>" + job.getJobPasteType() + "</td>" +
+                        "<td>" + job.getAdditionalInfo() + "</td>" +
+                        "<td>" + job.getUserSuppliedComment() + "</td>" +
+                        "<td><input type=\"checkbox\"></td>" +
+                        "</tr>");
+        }
+
+        return doc;
+    }
+
+    private String createProgPage(ArrayList<WeProdJob> jobList) {
+        Document doc = getHtmlTemplate(PROGRAM_TEMPLATE_PATH);
+
+        Element tbody = doc.select("tbody").first();
+        for (WeProdJob job : jobList) {
+
+            if (!job.getProgrammedCircuit1().equals("")) {
+
+                tbody.append("<tr>" +
+                        "<td>" + job.getArticleNumber() + "</td>" +
+                        "<td>" + job.getProgrammedCircuit1() + "</td>" +
+                        "<td>" + job.getProgram1() + "</td>" +
+                        "<td>" + job.getQuantity() + "</td>" +
+                        "<td>" + job.getAdditionalInfo() + "</td>" +
+                        "<td>" + job.getUserSuppliedComment() + "</td>" +
+                        "<td><input type=\"checkbox\"></td>" +
+                        "</tr>");
+            }
+
+            if (!job.getProgrammedCircuit2().equals("")) {
+                tbody.append("<tr>" +
+                        "<td>" + job.getArticleNumber() + "</td>" +
+                        "<td>" + job.getProgrammedCircuit2() + "</td>" +
+                        "<td>" + job.getProgram2() + "</td>" +
+                        "<td>" + job.getQuantity() + "</td>" +
+                        "<td>" + job.getAdditionalInfo() + "</td>" +
+                        "<td>" + job.getUserSuppliedComment() + "</td>" +
+                        "<td><input type=\"checkbox\"></td>" +
+                        "</tr>");
+            }
+        }
+
+        return elementToString(doc, "div.page-break");
+    }
+
 }

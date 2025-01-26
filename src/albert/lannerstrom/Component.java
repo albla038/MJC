@@ -13,9 +13,10 @@ public class Component {
     private Boolean matched;
     private Boolean duplicate;
     private String oldPosition;
+    private Boolean extra;
     private String cartNumber;
 
-    public Component(String position, String result, String partNumber, String partComment, String type, String width, String feederName, String qty, Boolean matched, Boolean duplicate) {
+    public Component(String position, String result, String partNumber, String partComment, String type, String width, String feederName, String qty, Boolean matched, Boolean duplicate, Boolean extra) {
         this.position = position;
         this.result = result;
         this.partNumber = partNumber;
@@ -26,6 +27,7 @@ public class Component {
         this.qty = qty;
         this.matched = matched;
         this.duplicate = duplicate;
+        this.extra = extra;
         createCartNumber();
     }
 
@@ -74,6 +76,10 @@ public class Component {
         return duplicate;
     }
 
+    public Boolean isExtra() {
+        return extra;
+    }
+
     public String getOldPosition() {
         return oldPosition;
     }
@@ -96,6 +102,10 @@ public class Component {
 
     public void setOldPosition(String oldPosition) {
         this.oldPosition = oldPosition;
+    }
+
+    public void setExtra(Boolean extra) {
+        this.extra = extra;
     }
 
     public void setCartNumber(String cartNumber) {
